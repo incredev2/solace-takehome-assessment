@@ -1,91 +1,107 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { useAdvocates } from "../hooks/useAdvocates";
+import { Table } from "../components/Table";
+import { Pagination } from "../components/Pagination";
+import { Advocate } from "../hooks/useAdvocates";
 
 export default function Home() {
-  const [advocates, setAdvocates] = useState([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState([]);
+  const {
+    advocates,
+    searchTerm,
+    setSearchTerm,
+    currentPage,
+    totalPages,
+    onPageChange,
+  } = useAdvocates();
 
-  useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      });
-    });
-  }, []);
+  const columns = useMemo(() => [
+    { header: "First Name", accessor: "firstName", width: "150px" },
+    { header: "Last Name", accessor: "lastName", width: "150px" },
+    { header: "City", accessor: "city", width: "150px" },
+    { header: "Degree", accessor: "degree", width: "150px" },
+    {
+      header: "Specialties",
+      accessor: (advocate: Advocate) => (
+        <div className="space-y-1 flex flex-wrap gap-1">
+          {advocate.specialties.map((specialty, index) => (
+            <span
+              key={`${advocate.id}-${index}`}
+              className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+            >
+              {specialty}
+            </span>
+          ))}
+        </div>
+      ),
+      width: "300px",
+    },
+    {
+      header: "Years of Experience",
+      accessor: "yearsOfExperience",
+      width: "150px",
+    },
+    { header: "Phone Number", accessor: "phoneNumber", width: "150px" },
+  ], []);
 
-  const onChange = (e) => {
-    const searchTerm = e.target.value;
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
 
-    document.getElementById("search-term").innerHTML = searchTerm;
-
-    console.log("filtering advocates...");
-    const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm) ||
-        advocate.yearsOfExperience.includes(searchTerm)
-      );
-    });
-
-    setFilteredAdvocates(filteredAdvocates);
+    const element = document.getElementById("search-term");
+    if (element) {
+      element.innerHTML = newSearchTerm;
+    }
   };
 
   const onClick = () => {
-    console.log(advocates);
-    setFilteredAdvocates(advocates);
+    setSearchTerm("");
   };
 
   return (
-    <main style={{ margin: "24px" }}>
-      <h1>Solace Advocates</h1>
-      <br />
-      <br />
-      <div>
-        <p>Search</p>
-        <p>
-          Searching for: <span id="search-term"></span>
+    <main className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+        Solace Advocates
+      </h1>
+
+      <div className="mb-8">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Search Advocates
+        </label>
+        <div className="flex gap-4">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              onChange={onChange}
+              value={searchTerm}
+              placeholder="Search by name, city, degree, or specialties..."
+            />
+          </div>
+          <button
+            onClick={onClick}
+            className="px-4 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium transition-colors"
+          >
+            Reset
+          </button>
+        </div>
+        <p className="mt-2 text-sm text-gray-500">
+          Searching for:{" "}
+          <span id="search-term" className="font-medium text-gray-900"></span>
         </p>
-        <input style={{ border: "1px solid black" }} onChange={onChange} />
-        <button onClick={onClick}>Reset Search</button>
       </div>
-      <br />
-      <br />
-      <table>
-        <thead>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>City</th>
-          <th>Degree</th>
-          <th>Specialties</th>
-          <th>Years of Experience</th>
-          <th>Phone Number</th>
-        </thead>
-        <tbody>
-          {filteredAdvocates.map((advocate) => {
-            return (
-              <tr>
-                <td>{advocate.firstName}</td>
-                <td>{advocate.lastName}</td>
-                <td>{advocate.city}</td>
-                <td>{advocate.degree}</td>
-                <td>
-                  {advocate.specialties.map((s) => (
-                    <div>{s}</div>
-                  ))}
-                </td>
-                <td>{advocate.yearsOfExperience}</td>
-                <td>{advocate.phoneNumber}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+
+      <div className="space-y-4">
+        <Table columns={columns} data={advocates} />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+        />
+      </div>
     </main>
   );
 }
