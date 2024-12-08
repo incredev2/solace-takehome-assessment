@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
 import { useAdvocates } from "../hooks/useAdvocates";
 import { Table } from "../components/Table";
 import { Pagination } from "../components/Pagination";
 import { Advocate } from "../hooks/useAdvocates";
+import { Loader } from "../components/Loader";
 
 export default function Home() {
   const {
@@ -14,9 +14,10 @@ export default function Home() {
     currentPage,
     totalPages,
     onPageChange,
+    isLoading,
   } = useAdvocates();
 
-  const columns = useMemo(() => [
+  const columns = [
     { header: "First Name", accessor: "firstName", width: "150px" },
     { header: "Last Name", accessor: "lastName", width: "150px" },
     { header: "City", accessor: "city", width: "150px" },
@@ -43,7 +44,7 @@ export default function Home() {
       width: "150px",
     },
     { header: "Phone Number", accessor: "phoneNumber", width: "150px" },
-  ], []);
+  ];
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = e.target.value;
@@ -61,46 +62,54 @@ export default function Home() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">
-        Solace Advocates
-      </h1>
-
-      <div className="mb-8">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Search Advocates
-        </label>
-        <div className="flex gap-4">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              onChange={onChange}
-              value={searchTerm}
-              placeholder="Search by name, city, degree, or specialties..."
-            />
+      <div className="relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10">
+            <Loader />
           </div>
-          <button
-            onClick={onClick}
-            className="px-4 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium transition-colors"
-          >
-            Reset
-          </button>
-        </div>
-        <p className="mt-2 text-sm text-gray-500">
-          Searching for:{" "}
-          <span id="search-term" className="font-medium text-gray-900"></span>
-        </p>
-      </div>
+        )}
 
-      <div className="space-y-4">
-        <Table columns={columns} data={advocates} />
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={onPageChange}
-        />
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">
+          Solace Advocates
+        </h1>
+
+        <div className="mb-8">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Search Advocates
+          </label>
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                onChange={onChange}
+                value={searchTerm}
+                placeholder="Search by name, city, degree, or specialties..."
+                disabled={isLoading}
+              />
+            </div>
+            <button
+              onClick={onClick}
+              className="px-4 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+            >
+              Reset
+            </button>
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            Searching for:{" "}
+            <span id="search-term" className="font-medium text-gray-900"></span>
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <Table columns={columns} data={advocates} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+          />
+        </div>
       </div>
     </main>
   );

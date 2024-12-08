@@ -29,16 +29,22 @@ export function useAdvocates() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const fetchAdvocates = async (search: string = "", page: number = 1) => {
-    console.log("fetching advocates...");
-    const response = await fetch(
-      `/api/advocates?search=${encodeURIComponent(search)}&page=${page}`
-    );
-    const data: AdvocatesResponse = await response.json();
-    setAdvocates(data.data);
-    setTotalPages(data.metadata.totalPages);
+    setIsLoading(true);
+    try {
+      console.log("fetching advocates...");
+      const response = await fetch(
+        `/api/advocates?search=${encodeURIComponent(search)}&page=${page}`
+      );
+      const data: AdvocatesResponse = await response.json();
+      setAdvocates(data.data);
+      setTotalPages(data.metadata.totalPages);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -56,6 +62,7 @@ export function useAdvocates() {
     currentPage,
     totalPages,
     onPageChange: handlePageChange,
+    isLoading,
   };
 }
 
